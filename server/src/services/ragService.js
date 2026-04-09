@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const Groq = require('groq-sdk');
 const PolicyChunk = require('../models/PolicyChunk');
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null;
 
 async function ingestAllPdfs() {
-  const dataDir = path.join(__dirname, '..', '..', '..', '_Data');
+  const dataDir = path.join(__dirname, '..', '..', '..', 'Data');
   if (!fs.existsSync(dataDir)) {
       console.error(`Data directory not found at: ${dataDir}`);
       return;
@@ -18,21 +18,27 @@ async function ingestAllPdfs() {
   await PolicyChunk.deleteMany({});
 
   for (const file of files) {
-    const filePath = path.join(dataDir, file);
-    const dataBuffer = fs.readFileSync(filePath);
-    const data = await pdfParse(dataBuffer);
+    try {
+      const filePath = path.join(dataDir, file);
+      const dataBuffer = fs.readFileSync(filePath);
+      const parser = new PDFParse({ data: dataBuffer });
+      const data = await parser.getText();
+      await parser.destroy();
 
-    // Simple robust chunking for enterprise policies
-    const chunks = data.text.split('\n\n').filter(c => c.trim().length > 100);
-    
-    for (const chunk of chunks) {
-      await PolicyChunk.create({
-        filename: file,
-        title: file.replace('.pdf', '').replace(/-/g, ' '),
-        text: chunk.trim()
-      });
+      // Simple robust chunking for enterprise policies
+      const chunks = data.text.split('\n\n').filter(c => c.trim().length > 100);
+      
+      for (const chunk of chunks) {
+        await PolicyChunk.create({
+          filename: file,
+          title: file.replace('.pdf', '').replace(/-/g, ' '),
+          text: chunk.trim()
+        });
+      }
+      console.log(`✅ Indexed ${file}`);
+    } catch (err) {
+      console.error(`❌ Failed to index ${file}:`, err.message);
     }
-    console.log(`✅ Indexed ${file}`);
   }
 }
 
@@ -55,6 +61,11 @@ async function processQuery(query) {
 
   const context = relevant.map(r => `[Source: ${r.chunk.title}]\n${r.chunk.text}`).join('\n\n');
   const sources = [...new Set(relevant.map(r => r.chunk.title))];
+
+  if (!groq) return { 
+      answer: "The AI service is currently unavailable. Please ensure the GROQ_API_KEY is properly configured.", 
+      sources: [] 
+  };
 
   const completion = await groq.chat.completions.create({
     messages: [
