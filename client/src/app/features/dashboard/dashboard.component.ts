@@ -22,6 +22,8 @@ export interface HRStats {
   attendanceRate: number;
   pendingApprovals: number;
   jobTitle: string;
+  profileCompletion: number;
+  joinedAt: string;
 }
 
 @Component({
@@ -32,324 +34,297 @@ export interface HRStats {
     <div class="dashboard-wrapper">
       <div class="dashboard-container">
 
-        <!-- Top Nav -->
+        <!-- ── Top Navigation ── -->
         <header class="top-nav">
-          <div class="brand">
-            <div class="logo-box"></div>
+          <div class="nav-left">
+            <div class="logo-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+            </div>
             <span class="brand-name">AcmeCorp</span>
           </div>
 
-          <nav class="nav-links">
-            <a routerLink="/dashboard" class="active">Dashboard</a>
-            <a routerLink="/about">About</a>
-            <a routerLink="/policies">Policies</a>
-            <a routerLink="/chat">AI Assistant</a>
+          <nav class="nav-middle">
+            <a routerLink="/dashboard" class="nav-link active">Dashboard</a>
+            <a routerLink="/about" class="nav-link">About</a>
+            <a routerLink="/policies" class="nav-link">Policies</a>
+            <a routerLink="/chat" class="nav-link">AI Assistant</a>
           </nav>
 
           <div class="nav-right">
-            <!-- Notification Bell -->
-            <div class="notif-bell" *ngIf="stats() as s" [title]="s.pendingApprovals + ' pending approvals'">
+            <button class="icon-btn notif-btn">
               <span class="bell-icon">🔔</span>
-              <span class="notif-badge" *ngIf="s.pendingApprovals > 0">{{ s.pendingApprovals }}</span>
-            </div>
-
-            <div class="user-profile" *ngIf="auth.currentUser() as user">
-              <div class="avatar-circle">{{ getInitials(user.name) }}</div>
-              <span class="user-name">{{ user.name }}</span>
-              <button class="logout-minimal" (click)="auth.logout()" title="Sign out">×</button>
+              <span class="dot-badge"></span>
+            </button>
+            <div class="user-chip" *ngIf="auth.currentUser() as user">
+              <div class="chip-avatar">{{ getInitials(user.name) }}</div>
+              <span class="chip-name">{{ user.name }}</span>
             </div>
           </div>
         </header>
 
-        <!-- Welcome Banner -->
-        <div class="welcome-banner" *ngIf="auth.currentUser() as user">
-          <div class="welcome-text">
-            <h1 class="greeting">{{ getGreeting() }}, {{ user.name.split(' ')[0] }}! 👋</h1>
-            <p class="greeting-sub">Here's your HR overview for today.</p>
-          </div>
-          <div class="banner-date">{{ today | date:'EEEE, MMMM d' }}</div>
-        </div>
-
-        <!-- KPI Metrics Row -->
-        <div class="metrics-row" *ngIf="stats() as s">
-
-          <!-- Leaves Card -->
-          <div class="metric-card card-blue">
-            <div class="card-icon">🗓️</div>
-            <div class="metric-value">{{ s.leavesRemaining.sick + s.leavesRemaining.casual }}</div>
-            <div class="metric-label">Leaves remaining</div>
-            <div class="leave-breakdown">{{ s.leavesRemaining.sick }} sick · {{ s.leavesRemaining.casual }} casual</div>
-            <div class="progress-bar-wrap">
-              <div class="progress-bar" [style.width]="getLeavePercent(s) + '%'"></div>
+        <!-- ── Hero Profile Section ── -->
+        <section class="hero-section" *ngIf="auth.currentUser() as user">
+          <div class="hero-content">
+            <div class="profile-main">
+              <div class="profile-avatar">{{ getInitials(user.name) }}</div>
+              <div class="profile-info">
+                <h1 class="user-name">{{ user.name }}</h1>
+                <p class="user-meta" *ngIf="stats() as s">
+                  {{ s.jobTitle }} · AcmeCorp · Joined {{ s.joinedAt | date:'MMM yyyy' }}
+                </p>
+                
+                <!-- Profile Progress -->
+                <div class="profile-progress" *ngIf="stats() as s">
+                  <div class="progress-track">
+                    <div class="progress-fill" [style.width]="s.profileCompletion + '%'"></div>
+                  </div>
+                  <span class="progress-text">{{ s.profileCompletion }}% profile complete — add emergency contact & bank details</span>
+                </div>
+              </div>
             </div>
-            <div class="progress-label">{{ getLeavePercent(s) }}% of annual allowance</div>
-          </div>
-
-          <!-- Tenure Card -->
-          <div class="metric-card card-purple">
-            <div class="card-icon">🏢</div>
-            <div class="metric-value">{{ s.tenure }} yrs</div>
-            <div class="metric-label">Tenure</div>
-            <div class="badge-pill purple">{{ s.jobTitle }}</div>
-          </div>
-
-          <!-- Approvals Card -->
-          <div class="metric-card card-amber">
-            <div class="card-icon">✅</div>
-            <div class="metric-value">{{ s.pendingApprovals }}</div>
-            <div class="metric-label">Pending approvals</div>
-            <div class="badge-pill amber">Action needed</div>
-          </div>
-
-          <!-- Attendance Card -->
-          <div class="metric-card card-green">
-            <div class="card-icon">📊</div>
-            <div class="metric-value">{{ s.attendanceRate }}%</div>
-            <div class="metric-label">Attendance this month</div>
-            <div class="progress-bar-wrap green">
-              <div class="progress-bar green" [style.width]="s.attendanceRate + '%'"></div>
+            
+            <div class="hero-actions">
+              <button class="btn btn-white">Complete profile</button>
+              <button class="btn btn-outline" routerLink="/chat">Apply leave</button>
+              <button class="btn btn-outline">View payslip</button>
             </div>
-            <div class="badge-pill green">On track</div>
+          </div>
+        </section>
+
+        <!-- ── KPI Cards Row ── -->
+        <div class="metrics-grid" *ngIf="stats() as s">
+          <!-- Leaves -->
+          <div class="kpi-card">
+            <div class="kpi-icon blue">🗓️</div>
+            <div class="kpi-value">{{ s.leavesRemaining.sick + s.leavesRemaining.casual }}</div>
+            <div class="kpi-label">Leaves remaining</div>
+            <div class="kpi-sub">{{ s.leavesRemaining.sick }} sick · {{ s.leavesRemaining.casual }} casual</div>
+            <div class="kpi-progress">
+              <div class="kpi-progress-track">
+                <div class="kpi-progress-fill" [style.width]="getLeavePercent(s) + '%'"></div>
+              </div>
+              <span class="kpi-progress-label">{{ getLeavePercent(s) }}% of annual allowance</span>
+            </div>
+          </div>
+
+          <!-- Tenure -->
+          <div class="kpi-card">
+            <div class="kpi-icon purple">🏢</div>
+            <div class="kpi-value">{{ s.tenure }} yrs</div>
+            <div class="kpi-label">Tenure</div>
+            <div class="kpi-sub">Joined {{ s.joinedAt | date:'MMM yyyy' }}</div>
+            <div class="kpi-tag purple">{{ s.jobTitle }}</div>
+          </div>
+
+          <!-- Approvals -->
+          <div class="kpi-card">
+            <div class="kpi-icon amber">✅</div>
+            <div class="kpi-value">{{ s.pendingApprovals }}</div>
+            <div class="kpi-label">Pending approvals</div>
+            <div class="kpi-sub">Nothing waiting on you</div>
+            <div class="kpi-tag amber">Action needed</div>
+          </div>
+
+          <!-- Attendance -->
+          <div class="kpi-card">
+            <div class="kpi-icon green">📊</div>
+            <div class="kpi-value">{{ s.attendanceRate }}%</div>
+            <div class="kpi-label">Attendance this month</div>
+            <div class="kpi-health-track">
+              <div class="health-fill" [style.width]="s.attendanceRate + '%'"></div>
+            </div>
+            <div class="kpi-tag green">On track</div>
           </div>
         </div>
 
-        <!-- Loading skeleton for stats -->
-        <div class="metrics-row" *ngIf="!stats()">
-          <div class="metric-card skeleton" *ngFor="let i of [1,2,3,4]">
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-line long"></div>
-            <div class="skeleton-line mid"></div>
-          </div>
-        </div>
-
-        <div class="info-grid">
+        <!-- ── Bottom Widgets Grid ── -->
+        <div class="widgets-grid">
+          
           <!-- Announcements -->
-          <section class="info-section">
-            <h2 class="section-title">
-              <span class="section-icon">📣</span>
-              Company announcements
-            </h2>
-            <div class="announcement-list">
-              <div class="empty-state" *ngIf="!loadingAnnouncements() && announcements().length === 0">No announcements available.</div>
-              <div class="loading-state" *ngIf="loadingAnnouncements()">Fetching updates...</div>
-              <div class="announcement-item" *ngFor="let ann of announcements()">
-                <span [class]="'status-dot ' + ann.indicator"></span>
-                <div class="ann-content">
-                  <div class="ann-title">{{ ann.title }}</div>
-                  <div class="ann-date">{{ ann.date | date:'MMM d, yyyy' }}</div>
+          <div class="widget-card">
+            <div class="widget-header">
+              <span class="widget-title">📢 Announcements</span>
+              <span class="widget-badge blue">3 new</span>
+            </div>
+            <div class="widget-list">
+              <div class="list-item" *ngFor="let ann of announcements()">
+                <div [class]="'marker ' + ann.indicator"></div>
+                <div class="item-body">
+                  <div class="item-title">{{ ann.title }}</div>
+                  <div class="item-meta">{{ ann.date | date:'MMM d, yyyy' }}</div>
                 </div>
               </div>
             </div>
-          </section>
+          </div>
 
-          <!-- Recent Consultations -->
-          <section class="info-section">
-            <h2 class="section-title">
-              <span class="section-icon">💬</span>
-              Recent Consultations
-            </h2>
-            <div class="history-list">
-              <div class="loading-state" *ngIf="loadingHistory()">Fetching conversations...</div>
+          <!-- Recent Activity -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <span class="widget-title">⏱️ Recent activity</span>
+            </div>
+            <div class="widget-list timeline">
+              <div class="timeline-item" *ngFor="let chat of chatHistory() | slice:0:4">
+                <div class="timeline-marker"></div>
+                <div class="item-body">
+                  <div class="item-title">Asked Aria about {{ chat.query | slice:0:20 }}...</div>
+                  <p class="item-sub">AI Assistant · {{ chat.createdAt | date:'shortTime' }}</p>
+                </div>
+                <div class="item-time">{{ chat.createdAt | date:'MMM d' }}</div>
+              </div>
+              <div class="timeline-item" *ngIf="stats()">
+                <div class="timeline-marker light"></div>
+                <div class="item-body">
+                  <div class="item-title">Account created</div>
+                  <p class="item-sub">Welcome to AcmeCorp!</p>
+                </div>
+                <div class="item-time">Apr 1</div>
+              </div>
+            </div>
+          </div>
 
-              <!-- Empty state with CTA -->
-              <div class="chat-cta" *ngIf="!loadingHistory() && chatHistory().length === 0">
-                <div class="cta-icon">🤖</div>
-                <p class="cta-text">No recent chats with Aria yet.</p>
-                <a routerLink="/chat" class="cta-btn">Ask Aria →</a>
-                <div class="suggested-chips">
-                  <a routerLink="/chat" class="chip">What's my leave balance?</a>
-                  <a routerLink="/chat" class="chip">WFH policy?</a>
-                  <a routerLink="/chat" class="chip">How to apply for leave?</a>
+          <!-- Ask Aria Widget -->
+          <div class="widget-card aria-widget">
+             <div class="widget-header">
+              <span class="widget-title">🤖 Ask Aria</span>
+              <span class="widget-badge green">Live</span>
+            </div>
+            <div class="mini-chat-card">
+              <div class="mini-chat-header">
+                <div class="mini-avatar">★</div>
+                <div class="mini-info">
+                  <div class="mini-name">Aria — HR Assistant</div>
+                  <div class="mini-docs">4,200+ docs</div>
                 </div>
               </div>
-
-              <a routerLink="/chat" class="history-item" *ngFor="let chat of chatHistory()">
-                <div class="icon-box gray">💬</div>
-                <div class="history-content">
-                  <div class="history-title">{{ chat.query }}</div>
-                  <div class="history-date">{{ chat.createdAt | date:'shortDate' }}</div>
-                </div>
-                <span class="chevron">›</span>
-              </a>
+              <div class="mini-chips">
+                <button class="mini-chip" routerLink="/chat">How many leaves do I have left?</button>
+                <button class="mini-chip" routerLink="/chat">What is the WFH policy?</button>
+                <button class="mini-chip" routerLink="/chat">When does Q2 appraisal start?</button>
+              </div>
+              <div class="mini-input-box" routerLink="/chat">
+                <span>Ask a policy question...</span>
+                <span class="mini-arrow">→</span>
+              </div>
             </div>
-          </section>
+          </div>
 
-          <!-- Quick Actions -->
-          <section class="info-section">
-            <h2 class="section-title">
-              <span class="section-icon">⚡</span>
-              Quick actions
-            </h2>
-            <div class="quick-links">
-              <a routerLink="/chat" class="quick-link-item">
-                <div class="icon-box blue">📄</div>
-                <span>Apply for leave</span>
-                <span class="chevron">›</span>
-              </a>
-              <a href="#" class="quick-link-item">
-                <div class="icon-box green">👤</div>
-                <span>My payslips</span>
-                <span class="chevron">›</span>
-              </a>
-              <a href="#" class="quick-link-item">
-                <div class="icon-box amber">⊕</div>
-                <span>Raise a support ticket</span>
-                <span class="chevron">›</span>
-              </a>
-              <a routerLink="/policies" class="quick-link-item">
-                <div class="icon-box purple">💼</div>
-                <span>Company policies</span>
-                <span class="chevron">›</span>
-              </a>
-            </div>
-          </section>
         </div>
-      </div>
-
-      <div class="global-footer">
-        <div class="ai-button" routerLink="/chat" title="Ask HR AI">✨</div>
       </div>
     </div>
   `,
   styles: [`
-    .dashboard-wrapper { min-height: 100vh; padding: var(--acme-padding); display: flex; flex-direction: column; align-items: center; background: var(--acme-bg); }
-    .dashboard-container {
-      width: 100%; max-width: 1200px;
-    }
+    :host { --aria-dark: #1e3a8a; --aria-blue: #3b82f6; --aria-bg: #f8fbff; }
+
+    .dashboard-wrapper { min-height: 100vh; background: var(--aria-bg); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    .dashboard-container { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 24px; }
 
     /* ── Top Nav ── */
-    .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; background: white; padding: 14px 28px; border-radius: var(--acme-radius-lg); border: 1px solid var(--acme-border); box-shadow: var(--acme-shadow-sm); }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .logo-box { width: 38px; height: 38px; background: var(--acme-primary); border-radius: var(--acme-radius-sm); }
-    .brand-name { font-size: 20px; font-weight: 800; color: var(--acme-accent); }
+    .top-nav { background: white; border-radius: 16px; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #edf2f7; }
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .logo-box { width: 32px; height: 32px; background: var(--aria-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+    .brand-name { font-size: 18px; font-weight: 800; color: #0f172a; }
 
-    .nav-links { display: flex; gap: 28px; }
-    .nav-links a { text-decoration: none; font-size: 14px; font-weight: 600; color: var(--acme-text-muted); padding-bottom: 2px; border-bottom: 2px solid transparent; }
-    .nav-links a.active { color: var(--acme-primary); border-bottom: 2px solid var(--acme-primary); }
-    .nav-links a:hover { color: var(--acme-primary); }
+    .nav-middle { display: flex; gap: 24px; }
+    .nav-link { text-decoration: none; font-size: 14px; font-weight: 600; color: #64748b; padding: 4px 0; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .nav-link:hover { color: var(--aria-blue); }
+    .nav-link.active { color: var(--aria-dark); border-bottom-color: var(--aria-dark); }
 
     .nav-right { display: flex; align-items: center; gap: 16px; }
-    .notif-bell { position: relative; cursor: pointer; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 50%; border: 1px solid var(--acme-border); }
-    .notif-bell:hover { background: #eff6ff; }
-    .bell-icon { font-size: 16px; }
-    .notif-badge { position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+    .icon-btn { background: #f8fafc; border: 1px solid #e2e8f0; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+    .dot-badge { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; border: 2px solid white; }
+    .user-chip { background: white; border: 1.5px solid #e2e8f0; padding: 4px 14px 4px 4px; border-radius: 99px; display: flex; align-items: center; gap: 10px; }
+    .chip-avatar { width: 32px; height: 32px; background: var(--aria-dark); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+    .chip-name { font-size: 13px; font-weight: 700; color: #0f172a; }
 
-    .user-profile { display: flex; align-items: center; gap: 10px; }
-    .avatar-circle { width: 36px; height: 36px; background: var(--acme-sidebar-light); color: var(--acme-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; }
-    .user-name { font-weight: 600; font-size: 14px; color: var(--acme-text); }
-    .logout-minimal { background: transparent; border: none; font-size: 20px; color: var(--acme-text-muted); cursor: pointer; line-height: 1; }
-    .logout-minimal:hover { color: #ef4444; }
+    /* ── Hero Section ── */
+    .hero-section { background: var(--aria-dark); border-radius: 20px; padding: 40px; color: white; position: relative; overflow: hidden; }
+    .hero-section::before { content: ''; position: absolute; top: 0; right: 0; width: 300px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03)); transform: skewX(-20deg); }
+    
+    .hero-content { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+    .profile-main { display: flex; align-items: center; gap: 24px; }
+    .profile-avatar { width: 84px; height: 84px; background: white; color: var(--aria-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; border: 4px solid rgba(255,255,255,0.2); }
+    .user-name { font-size: 26px; font-weight: 800; margin: 0 0 6px; }
+    .user-meta { margin: 0 0 16px; font-size: 14px; opacity: 0.7; font-weight: 500; }
 
-    /* ── Welcome Banner ── */
-    .welcome-banner {
-      background: linear-gradient(135deg, var(--acme-accent) 0%, var(--acme-primary) 100%);
-      border-radius: var(--acme-radius-lg); padding: 32px 40px; margin-bottom: 32px;
-      display: flex; align-items: center; justify-content: space-between;
-      color: white;
-    }
-    .greeting { font-size: 28px; font-weight: 800; margin: 0 0 6px; }
-    .greeting-sub { margin: 0; font-size: 15px; opacity: 0.8; }
-    .banner-date { font-size: 14px; font-weight: 600; opacity: 0.75; background: rgba(255,255,255,0.15); padding: 8px 18px; border-radius: 99px; }
+    .profile-progress { max-width: 400px; }
+    .progress-track { background: rgba(255,255,255,0.15); height: 8px; border-radius: 99px; margin-bottom: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #22c55e; border-radius: 99px; box-shadow: 0 0 10px rgba(34,197,94,0.4); }
+    .progress-text { font-size: 12px; opacity: 0.8; font-weight: 500; }
 
-    /* ── Metric Cards ── */
-    .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
+    .hero-actions { display: flex; gap: 12px; }
+    .btn { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; }
+    .btn-white { background: white; color: var(--aria-dark); }
+    .btn-white:hover { background: #f8fafc; transform: translateY(-2px); }
+    .btn-outline { background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.3); color: white; }
+    .btn-outline:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
 
-    .metric-card {
-      padding: 24px; border-radius: var(--acme-radius-lg); border: 1px solid transparent;
-      position: relative; overflow: hidden; transition: all 0.25s ease;
-    }
-    .metric-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+    /* ── KPI Cards ── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .kpi-card { background: white; padding: 24px; border-radius: 20px; border: 1.5px solid #edf2f7; transition: all 0.2s; }
+    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.05); border-color: var(--aria-blue); }
+    
+    .kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 20px; }
+    .kpi-icon.blue { background: #eff6ff; }
+    .kpi-icon.purple { background: #f5f3ff; }
+    .kpi-icon.amber { background: #fffbeb; }
+    .kpi-icon.green { background: #f0fdf4; }
 
-    .card-blue { background: #eff6ff; border-color: #bfdbfe; }
-    .card-purple { background: #f5f3ff; border-color: #ddd6fe; }
-    .card-amber { background: #fffbeb; border-color: #fde68a; }
-    .card-green { background: #f0fdf4; border-color: #bbf7d0; }
+    .kpi-value { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .kpi-label { font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 12px; }
+    .kpi-sub { font-size: 11px; color: #94a3b8; font-weight: 500; margin-bottom: 12px; }
 
-    .card-icon { font-size: 22px; margin-bottom: 12px; }
-    .metric-value { font-size: 30px; font-weight: 800; color: var(--acme-accent); margin-bottom: 4px; }
-    .metric-label { font-size: 13px; color: var(--acme-text-muted); font-weight: 500; margin-bottom: 14px; }
-    .leave-breakdown { font-size: 12px; color: var(--acme-text-secondary); margin-bottom: 10px; }
+    .kpi-progress-track, .kpi-health-track { background: #f1f5f9; height: 6px; border-radius: 99px; margin-bottom: 6px; }
+    .kpi-progress-fill { height: 100%; background: var(--aria-blue); border-radius: 99px; }
+    .kpi-progress-label { font-size: 10px; color: #94a3b8; font-weight: 600; }
+    .health-fill { height: 100%; background: #22c55e; border-radius: 99px; }
 
-    .progress-bar-wrap { background: rgba(0,0,0,0.06); border-radius: 99px; height: 6px; margin-bottom: 6px; overflow: hidden; }
-    .progress-bar { height: 100%; border-radius: 99px; background: var(--acme-primary); transition: width 1s ease; }
-    .progress-bar.green { background: #22c55e; }
-    .progress-label { font-size: 11px; color: var(--acme-text-muted); }
+    .kpi-tag { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; margin-top: 4px; }
+    .kpi-tag.purple { background: #f5f3ff; color: #7c3aed; }
+    .kpi-tag.amber { background: #fffbeb; color: #d97706; }
+    .kpi-tag.green { background: #f0fdf4; color: #166534; }
 
-    .badge-pill { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; margin-top: 4px; }
-    .badge-pill.purple { background: #ede9fe; color: #5b21b6; }
-    .badge-pill.amber { background: #fef3c7; color: #92400e; }
-    .badge-pill.green { background: #dcfce7; color: #166534; }
+    /* ── Widgets Grid ── */
+    .widgets-grid { display: grid; grid-template-columns: 1fr 1fr 0.8fr; gap: 16px; margin-top: 4px; }
+    .widget-card { background: white; border-radius: 20px; border: 1.5px solid #edf2f7; padding: 24px; }
+    .widget-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .widget-title { font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    .widget-badge { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+    .widget-badge.blue { background: #eff6ff; color: #1e40af; }
+    .widget-badge.green { background: #f0fdf4; color: #166534; }
 
-    /* Skeleton */
-    .skeleton { background: #f1f5f9; border-color: #e2e8f0; }
-    .skeleton-line { background: #e2e8f0; border-radius: 6px; margin-bottom: 10px; height: 14px; }
-    .skeleton-line.short { width: 40%; }
-    .skeleton-line.long { width: 70%; height: 24px; }
-    .skeleton-line.mid { width: 55%; }
+    .widget-list { display: flex; flex-direction: column; gap: 18px; }
+    .list-item { display: flex; gap: 16px; align-items: flex-start; }
+    .marker { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+    .marker.blue { background: var(--aria-blue); }
+    .marker.green { background: #22c55e; }
+    .marker.orange { background: #f59e0b; }
+    .item-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 2px; }
+    .item-meta { font-size: 12px; color: #94a3b8; font-weight: 500; }
 
-    /* ── Info Grid ── */
-    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-    .info-section {
-      background: white; padding: 28px; border-radius: var(--acme-radius-lg); border: 1px solid var(--acme-border);
-      transition: all 0.25s ease;
-    }
-    .info-section:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.05); }
+    /* Timeline */
+    .timeline { gap: 24px; position: relative; }
+    .timeline::before { content: ''; position: absolute; left: 4px; top: 10px; height: calc(100% - 20px); width: 1.5px; background: #f1f5f9; }
+    .timeline-item { display: flex; gap: 16px; position: relative; }
+    .timeline-marker { width: 10px; height: 10px; border-radius: 50%; background: var(--aria-blue); border: 2px solid white; z-index: 1; margin-top: 4px; box-shadow: 0 0 0 4px white; }
+    .timeline-marker.light { background: #cbd5e1; }
+    .item-sub { font-size: 12px; color: #64748b; margin: 2px 0 0; font-weight: 500; }
+    .item-time { font-size: 11px; color: #94a3b8; font-weight: 600; text-align: right; min-width: 40px; }
 
-    .section-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; color: var(--acme-accent); display: flex; align-items: center; gap: 8px; }
-    .section-icon { font-size: 16px; }
-
-    /* Announcements */
-    .announcement-item { display: flex; gap: 14px; margin-bottom: 20px; align-items: flex-start; }
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-    .status-dot.primary { background: var(--acme-primary); }
-    .status-dot.green { background: #22c55e; }
-    .status-dot.orange { background: #f59e0b; }
-    .status-dot.blue { background: #4f46e5; }
-    .ann-title { font-size: 14px; font-weight: 600; color: var(--acme-text); margin-bottom: 3px; }
-    .ann-date { font-size: 12px; color: var(--acme-text-muted); }
-
-    /* Chat CTA */
-    .chat-cta { text-align: center; padding: 24px 16px; }
-    .cta-icon { font-size: 36px; margin-bottom: 12px; }
-    .cta-text { color: var(--acme-text-muted); font-size: 14px; margin-bottom: 16px; }
-    .cta-btn { display: inline-block; background: var(--acme-primary); color: white; padding: 10px 24px; border-radius: 99px; font-size: 14px; font-weight: 700; text-decoration: none; }
-    .cta-btn:hover { background: var(--acme-accent); transform: translateY(-2px); }
-    .suggested-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
-    .chip { background: var(--acme-sidebar-light); color: var(--acme-accent); padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 600; text-decoration: none; }
-    .chip:hover { background: #bfdbfe; }
-
-    /* History */
-    .quick-links, .history-list { display: flex; flex-direction: column; }
-    .quick-link-item, .history-item {
-      display: flex; align-items: center; padding: 14px 10px; border-bottom: 1px solid var(--acme-border);
-      text-decoration: none; color: var(--acme-text); font-size: 14px; font-weight: 600;
-      border-radius: var(--acme-radius-sm); transition: all 0.15s ease;
-    }
-    .quick-link-item:last-child, .history-item:last-child { border-bottom: none; }
-    .quick-link-item:hover, .history-item:hover { background: #f8fafc; padding-left: 16px; }
-
-    .icon-box { width: 38px; height: 38px; border-radius: var(--acme-radius-sm); display: flex; align-items: center; justify-content: center; margin-right: 14px; font-size: 16px; flex-shrink: 0; }
-    .icon-box.gray { background: #f1f5f9; }
-    .icon-box.blue { background: #eff6ff; }
-    .icon-box.green { background: #f0fdf4; }
-    .icon-box.amber { background: #fffbeb; }
-    .icon-box.purple { background: #f5f3ff; }
-
-    .chevron { margin-left: auto; color: #cbd5e1; font-size: 20px; font-weight: 400; }
-    .history-content { flex: 1; }
-    .history-title { font-size: 13px; margin-bottom: 2px; }
-    .history-date { font-size: 11px; color: var(--acme-text-muted); }
-
-    .loading-state, .empty-state { padding: 32px; text-align: center; font-size: 14px; color: var(--acme-text-muted); }
-
-    /* ── Footer FAB ── */
-    .global-footer { margin-top: 32px; display: flex; justify-content: center; }
-    .ai-button {
-      width: 52px; height: 52px; background: var(--acme-primary); color: white;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 22px; box-shadow: 0 4px 20px rgba(59,130,246,0.4); cursor: pointer;
-    }
-    .ai-button:hover { background: var(--acme-accent); transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 28px rgba(30,58,138,0.4); }
+    /* Mini Chat Aria */
+    .aria-widget { background: white; }
+    .mini-chat-card { background: var(--aria-dark); border-radius: 16px; padding: 20px; color: white; display: flex; flex-direction: column; gap: 14px; cursor: pointer; transition: transform 0.2s; }
+    .mini-chat-card:hover { transform: scale(1.02); }
+    .mini-chat-header { display: flex; align-items: center; gap: 12px; }
+    .mini-avatar { width: 34px; height: 34px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .mini-name { font-size: 13px; font-weight: 800; }
+    .mini-docs { font-size: 11px; opacity: 0.6; font-weight: 500; }
+    
+    .mini-chips { display: flex; flex-direction: column; gap: 8px; }
+    .mini-chip { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; text-align: left; transition: all 0.2s; }
+    .mini-chip:hover { background: rgba(255,255,255,0.15); }
+    
+    .mini-input-box { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; opacity: 0.8; font-weight: 500; }
+    .mini-arrow { background: white; color: var(--aria-dark); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
   `]
 })
 export class DashboardComponent implements OnInit {
@@ -359,8 +334,6 @@ export class DashboardComponent implements OnInit {
   stats = signal<HRStats | null>(null);
   announcements = signal<Announcement[]>([]);
   chatHistory = signal<ChatSession[]>([]);
-  loadingAnnouncements = signal(true);
-  loadingHistory = signal(true);
   today = new Date();
 
   ngOnInit() {
@@ -377,27 +350,18 @@ export class DashboardComponent implements OnInit {
 
   fetchAnnouncements() {
     this.http.get<Announcement[]>(`${environment.apiUrl}/hr/announcements`).subscribe({
-      next: (res) => { this.announcements.set(res); this.loadingAnnouncements.set(false); },
-      error: () => this.loadingAnnouncements.set(false)
+      next: (res) => this.announcements.set(res)
     });
   }
 
   fetchChatHistory() {
     this.http.get<ChatSession[]>(`${environment.apiUrl}/policies/chat/history`).subscribe({
-      next: (res) => { this.chatHistory.set(res); this.loadingHistory.set(false); },
-      error: () => this.loadingHistory.set(false)
+      next: (res) => this.chatHistory.set(res)
     });
   }
 
   getInitials(name: string): string {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  }
-
-  getGreeting(): string {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
   }
 
   getLeavePercent(s: HRStats): number {

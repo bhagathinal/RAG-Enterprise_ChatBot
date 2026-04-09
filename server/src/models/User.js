@@ -14,7 +14,9 @@ const UserSchema = new mongoose.Schema({
   tenure: { type: Number, default: 0 }, // In years
   attendanceRate: { type: Number, default: 100 }, // Percentage
   pendingApprovals: { type: Number, default: 0 },
-  jobTitle: { type: String, default: 'Employee' }
+  jobTitle: { type: String, default: 'Employee' },
+  profileCompletion: { type: Number, default: 65 },
+  joinedAt: { type: Date, default: '2026-04-01' }
 
 }, { timestamps: true });
 

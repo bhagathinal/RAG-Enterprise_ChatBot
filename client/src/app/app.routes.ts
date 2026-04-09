@@ -13,7 +13,7 @@ export const routes: Routes = [
   { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent), canActivate: [authGuard] },
   { path: 'chat', loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent), canActivate: [authGuard] },
   { path: 'policies', loadComponent: () => import('./features/dashboard/policy-list.component').then(m => m.PolicyListComponent), canActivate: [authGuard] },
-  { path: 'about', redirectTo: '/dashboard' },
+  { path: 'about', loadComponent: () => import('./features/about/about.component').then(m => m.AboutComponent), canActivate: [authGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' }
 ];

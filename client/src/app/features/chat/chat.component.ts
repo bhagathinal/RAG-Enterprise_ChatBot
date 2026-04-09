@@ -217,14 +217,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   fetchHistory() {
     this.http.get<any[]>(`${environment.apiUrl}/policies/chat/history`).subscribe({
       next: (res) => {
-        // Show last 4 sessions in sidebar
+        // Show last 4 sessions in sidebar for reference
         this.pastSessions.set(res.slice(0, 4));
-        const historicalMsgs: Message[] = [];
-        res.reverse().forEach(session => {
-          historicalMsgs.push({ role: 'user', content: session.query });
-          historicalMsgs.push({ role: 'assistant', content: session.answer, sources: session.sources });
-        });
-        this.messages.set(historicalMsgs);
+        // We no longer populate the main chat area with history, 
+        // ensuring the user always starts with a 'New Chat' welcome screen.
+        this.messages.set([]);
       }
     });
   }
