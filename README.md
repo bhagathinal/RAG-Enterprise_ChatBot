@@ -1,18 +1,18 @@
 # RAG Enterprise ChatBot — Aria AI Assistant
 
-An enterprise-grade **Retrieval-Augmented Generation (RAG)** system that lets employees query internal company policy documents through a conversational AI assistant named **Aria**. Built with Angular 21, Node.js/Express, MongoDB, and the Groq LLM API.
+An enterprise-grade **Retrieval-Augmented Generation (RAG)** system that lets employees query internal company policy documents through a conversational AI assistant named **Aria**. Powered by **LangChain**, Node.js/Express, MongoDB, and the Groq LLM API.
 
 ---
 
 ## ✨ Features
 
-- 🤖 **Aria AI Assistant** — Named AI chatbot with a branded UI, starter prompts, and source citations
-- 📄 **RAG Pipeline** — PDFs are chunked and indexed into MongoDB; relevant chunks are retrieved per query and fed to the LLM
-- 🔐 **JWT Authentication** — Secure signup/login with bcrypt-hashed passwords
-- 📊 **HR Dashboard** — KPI metrics (leave balance, tenure, attendance), company announcements, and recent Aria sessions
-- 📋 **Policy Library** — Browse all indexed company documents
-- 💬 **Chat History** — Past conversations are persisted in MongoDB and restored on login
-- 🌐 **Angular 21 SPA** — Standalone components, signals, reactive forms
+- 🤖 **Aria AI Assistant** — Named AI chatbot with a branded UI, interactive starter chips, and professional persona.
+- ⛓️ **LangChain Pipeline** — Advanced RAG orchestration using `RecursiveCharacterTextSplitter` for reliable, token-efficient document processing.
+- 📄 **Smart Ingestion** — Automatically parses PDFs and breaks them into overlapping 1,000-character segments to maintain context and resolve token limits.
+- 📝 **Markdown Formatting** — AI responses support full Markdown rendering (Bold, Lists, Paragraphs) for a premium reading experience.
+- 📊 **HR Dashboard** — KPI metrics (leave balance, tenure, attendance), company announcements, and recent Aria sessions.
+- 💬 **Chat History** — Past conversations are persisted in MongoDB and restored on login.
+- 🌐 **Angular 21 SPA** — High-performance frontend using standalone components and Signals.
 
 ---
 
@@ -20,11 +20,11 @@ An enterprise-grade **Retrieval-Augmented Generation (RAG)** system that lets em
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Angular 21, Angular Signals, CSS |
-| Backend | Node.js, Express.js |
+| Frontend | Angular 21, **marked**, **dompurify**, CSS |
+| Backend | Node.js, Express.js, **LangChain** |
 | Database | MongoDB (`policyhub` database) |
-| AI / LLM | Groq API (LLaMA 3) |
-| PDF Parsing | pdf-parse v2 (`PDFParse` class) |
+| AI / LLM | **ChatGroq** (LLaMA 3.1 8B via Groq SDK) |
+| PDF Parsing | pdf-parse v2 |
 | Auth | JWT + bcryptjs |
 
 ---
@@ -34,41 +34,26 @@ An enterprise-grade **Retrieval-Augmented Generation (RAG)** system that lets em
 ```
 RAG_Enterprise/
 ├── client/                   # Angular 21 frontend
-│   └── src/
-│       ├── app/
-│       │   ├── core/services/    # AuthService
-│       │   ├── features/
-│       │   │   ├── chat/         # Aria chat interface
-│       │   │   └── dashboard/    # HR dashboard + policy list
-│       │   └── app.routes.ts
-│       └── environments/
-│           ├── environment.ts          # Development config
-│           └── environment.production.ts  # Production config
+│   └── src/app/
+│       ├── shared/pipes/     # MarkdownPipe
+│       └── features/
+│           ├── chat/         # Aria chat with markdown rendering
+│           └── dashboard/    # HR dashboard
 │
 ├── server/                   # Express.js backend
 │   ├── src/
-│   │   ├── config/           # DB connection
-│   │   ├── middleware/        # Auth middleware
-│   │   ├── models/
-│   │   │   ├── User.js        # User schema (bcrypt hashed passwords)
-│   │   │   ├── PolicyChunk.js # Indexed PDF text chunks
-│   │   │   └── ...
-│   │   ├── routes/
-│   │   │   ├── auth.js        # POST /api/auth/signup, /login
-│   │   │   ├── policy.js      # POST /api/policies/chat, GET /history
-│   │   │   └── hr.js          # GET /api/hr/stats, /announcements
 │   │   ├── services/
-│   │   │   └── ragService.js  # PDF ingestion + RAG query pipeline
-│   │   └── server.js
-│   ├── .env                  # Environment variables (not committed)
-│   └── package.json
+│   │   │   ├── ragService.js # High-level RAG orchestration
+│   │   │   └── ragChain.js   # LangChain logic & LLM configuration
+│   │   └── server.js         # Entry point with auto-ingestion logic
+│   └── .env                  # Environment variables
 │
 └── Data/                     # Source PDF policy documents
     ├── Annual-Report-2024-25.pdf
     ├── Employee-Handbook.pdf
     ├── Leave-and-Holiday-Policy.pdf
-    ├── Privacy_and_terms.pdf
-    └── Technical-Documentation.pdf
+    ├── Technical-Documentation.pdf
+    └── ...
 ```
 
 ---
@@ -81,7 +66,6 @@ RAG_Enterprise/
 - A [Groq API key](https://console.groq.com/)
 
 ### 1. Clone the repo
-
 ```bash
 git clone https://github.com/bhagathinal/RAG-Enterprise_ChatBot.git
 cd RAG-Enterprise_ChatBot
